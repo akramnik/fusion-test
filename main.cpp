@@ -31,11 +31,15 @@ struct Printer {
     }
 };
 
+template<template<typename> class Func>
 struct Helper {
     template<typename T>
     static typename std::enable_if<boost::fusion::traits::is_sequence<T>::value>::type
     print(const char *name, T*) {
-	std::cout << name << " sequence" << std::endl;
+	std::cout << name << " sequence" << std::endl;	
+	
+	typedef boost::mpl::range_c<int, 0, boost::mpl::size<T>::value> range;
+	boost::mpl::for_each<range>(Func<T>());
     }
 
     template<typename T>
@@ -51,7 +55,7 @@ struct Func {
     void operator()(N) const {
 	const char *name = boost::fusion::extension::struct_member_name<T, N::value>::call();
 	typename boost::fusion::result_of::value_at<T, N>::type *ptr = NULL;
-	Helper::print(name, ptr);
+	Helper<Func>::print(name, ptr);
     }
 };
 
@@ -59,7 +63,7 @@ template<typename T>
 void doit(const T & val) {
     boost::fusion::for_each(val, Printer());
 
-    typedef boost::mpl::range_c<int, 0, boost::mpl::size<Bar>::value> range;
+    typedef boost::mpl::range_c<int, 0, boost::mpl::size<T>::value> range;
     boost::mpl::for_each<range>(Func<T>());
 }
 
